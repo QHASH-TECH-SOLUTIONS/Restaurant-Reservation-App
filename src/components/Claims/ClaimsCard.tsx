@@ -6,9 +6,6 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
-  Linking,
-  Platform,
-  Alert,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
