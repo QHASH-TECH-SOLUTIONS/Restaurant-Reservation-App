@@ -20,6 +20,7 @@
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "^2.25.0",
+    "react-native-maps": "^1.23.8",
     "react-native-reanimated-carousel": "^4.0.2",
     "react-native-responsive-screen": "^1.4.2",
     "react-native-safe-area-context": "^5.4.0",

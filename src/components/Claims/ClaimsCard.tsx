@@ -8,6 +8,7 @@ import {
   FlatList,
   Linking,
   Platform,
+  Alert,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -16,6 +17,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import {Dimensions} from 'react-native';
+import { dialCall, openMap } from '../../constants/data';
 const {width, height} = Dimensions.get('window');
 const isTablet = width > 768;
 
@@ -58,33 +60,32 @@ const Claims = () => {
       people: 2,
     },
   ];
-//  function square(number: number): number {
-//   return number * number;
-// }
 
-// const dialCall = (number: string): void => {
-//   let phoneNumber = '';
-//   if (Platform.OS === 'android') {
-//     phoneNumber = `tel:${number}`;
+
+
+
+// const openMap = (lat: number, lng: number, label: string = 'Location') => {
+//   const latLng = `${lat},${lng}`;
+//   let url = '';
+
+//   if (Platform.OS === 'ios') {
+//     // Apple Maps
+//     url = `http://maps.apple.com/?ll=${latLng}&q=${label}`;
 //   } else {
-//     phoneNumber = `telprompt:${number}`;
+//     // Android (Google Maps)
+//     url = `geo:0,0?q=${latLng}(${label})`;
 //   }
-//   Linking.openURL(phoneNumber);
+
+//   Linking.canOpenURL(url)
+//     .then((supported) => {
+//       if (supported) {
+//         return Linking.openURL(url);
+//       } else {
+//         Alert.alert('Error', 'Maps not supported on this device');
+//       }
+//     })
+//     .catch((err) => Alert.alert('Error', err.message));
 // };
-function square(number: number): number {
-  return number * number;
-}
-
-const dialCall = (number: string): void => {
-  let phoneNumber = '';
-  if (Platform.OS === 'android') {
-    phoneNumber = `tel:${number}`;
-  } else {
-    phoneNumber = `telprompt:${number}`;
-  }
-  Linking.openURL(phoneNumber);
-};
-
 
   const renderClaimCard = ({item}: any) => (
     <View style={styles.card}>
@@ -135,7 +136,9 @@ const dialCall = (number: string): void => {
       </View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
-        onPress={() => {Linking.openURL('tel:+92 336-4749474');}}
+        // onPress={() => {Linking.openURL('tel:+92 336-4749474');}}
+        onPress={() => {dialCall('+92 336-4749474')}}
+
         style={[styles.actionButton, styles.callButton]}>
           <MaterialIcons
             name="call"
@@ -144,7 +147,9 @@ const dialCall = (number: string): void => {
           />
           <Text style={styles.actionText}>Call</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.locationButton]}>
+        <TouchableOpacity 
+          onPress={() => {openMap(37.7749, -122.4194)}}
+        style={[styles.actionButton, styles.locationButton]}>
           <MaterialIcons
             name="location-on"
             size={isTablet ? hp('2%') : hp('2.4%')}
