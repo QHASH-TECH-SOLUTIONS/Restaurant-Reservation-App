@@ -6,6 +6,8 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
+  Linking,
+  Platform,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -56,6 +58,33 @@ const Claims = () => {
       people: 2,
     },
   ];
+//  function square(number: number): number {
+//   return number * number;
+// }
+
+// const dialCall = (number: string): void => {
+//   let phoneNumber = '';
+//   if (Platform.OS === 'android') {
+//     phoneNumber = `tel:${number}`;
+//   } else {
+//     phoneNumber = `telprompt:${number}`;
+//   }
+//   Linking.openURL(phoneNumber);
+// };
+function square(number: number): number {
+  return number * number;
+}
+
+const dialCall = (number: string): void => {
+  let phoneNumber = '';
+  if (Platform.OS === 'android') {
+    phoneNumber = `tel:${number}`;
+  } else {
+    phoneNumber = `telprompt:${number}`;
+  }
+  Linking.openURL(phoneNumber);
+};
+
 
   const renderClaimCard = ({item}: any) => (
     <View style={styles.card}>
@@ -105,7 +134,9 @@ const Claims = () => {
         </View>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.actionButton, styles.callButton]}>
+        <TouchableOpacity 
+        onPress={() => {Linking.openURL('tel:+92 336-4749474');}}
+        style={[styles.actionButton, styles.callButton]}>
           <MaterialIcons
             name="call"
             size={isTablet ? hp('2%') : hp('2.4%')}
