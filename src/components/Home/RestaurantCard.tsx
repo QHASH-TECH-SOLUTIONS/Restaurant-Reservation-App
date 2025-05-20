@@ -10,6 +10,7 @@ import {
   Image,
   ScrollView,
   Modal,
+  LayoutChangeEvent,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -18,6 +19,16 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import {useNavigation} from '@react-navigation/native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+  withTiming,
+  Easing,
+  ReduceMotion,
+} from 'react-native-reanimated';
 
 const {width, height} = Dimensions.get('window');
 const isTablet = width > 768;
@@ -34,7 +45,24 @@ const RestaurantCard = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [spotsCount, setSpotsCount] = useState<number>(1);
   const [activeToggle, setActiveToggle] = useState('frshbites'); // 'frshbites' or 'frshdeals'
+  const [layoutHeight, setLayoutHeight] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isCarouselExpanded, setIsCarouselExpanded] = useState(false); // New state for carousel expansion
+
+  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>(
+    {},
+  );
+  // Height values for collapsed and expanded states
+  const COLLAPSED_HEIGHT = hp('25%');
+  const EXPANDED_HEIGHT = hp('70%');
+
   const navigation = useNavigation();
+
+  const height = useSharedValue(180);
+
+  const handlePress = () => {
+    height.value = withSpring(height.value + 300);
+  };
   const restaurants = [
     {
       name: "Joe's Stone Crab",
@@ -84,22 +112,40 @@ const RestaurantCard = () => {
         'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
       isCarousel: false,
     },
+    {
+      name: 'Jaguar Sun',
+      offer: 'Half-priced signature cocktails',
+      times: [
+        {time: '5:00 PM', spots: 4},
+        {time: '6:00 PM', spots: 3},
+        {time: '7:00 PM', spots: 0},
+        {time: '8:00 PM', spots: 4},
+      ],
+      profileImage:
+        'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150&q=80',
+      image:
+        'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+      isCarousel: false,
+    },
   ];
 
   useEffect(() => {
     let index = 0;
-    const timer = setInterval(() => {
-      if (
-        flatListRef.current &&
-        restaurants[0].images &&
-        restaurants[0].images.length > 0
-      ) {
-        index = (index + 1) % restaurants[0].images.length;
-        flatListRef.current.scrollToIndex({index, animated: true});
-      }
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
+    if (!isCarouselExpanded) {
+      // Only run auto-scroll if carousel is not expanded
+      const timer = setInterval(() => {
+        if (
+          flatListRef.current &&
+          restaurants[0].images &&
+          restaurants[0].images.length > 0
+        ) {
+          index = (index + 1) % restaurants[0].images.length;
+          flatListRef.current.scrollToIndex({index, animated: true});
+        }
+      }, 3000);
+      return () => clearInterval(timer);
+    }
+  }, [isCarouselExpanded]);
 
   useEffect(() => {
     if (expandedCardIndex !== null && scrollViewRef.current) {
@@ -127,166 +173,328 @@ const RestaurantCard = () => {
     setModalVisible(true);
   };
 
-  const renderImageItem = ({item}: any, restaurantIndex: number) => (
-    <TouchableOpacity
-      onPress={() => {
-        setSelectedRestaurant(restaurants[restaurantIndex]);
-        setSelectedTime(null);
-        setModalVisible(true);
-      }}>
-      <View style={styles.carouselItem}>
-        <ImageBackground
-          source={{uri: item}}
-          style={styles.image}
-          resizeMode="cover">
-          <View style={styles.topOverlay}>
-            <View style={styles.profileContainer}>
-              <Image
-                source={{uri: restaurants[restaurantIndex].profileImage}}
-                style={styles.profileImage}
-                resizeMode="cover"
-              />
-              <Text style={styles.profileName}>
-                {restaurants[restaurantIndex].name}
-              </Text>
-            </View>
-            <View style={styles.iconContainer}>
-              <TouchableOpacity style={styles.iconButton}>
-                <MaterialCommunityIcons
-                  name="message-arrow-right-outline"
-                  size={hp('3%')}
-                  color={'white'}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton}>
-                <MaterialIcons
-                  name="favorite-border"
-                  size={hp('3%')}
-                  color="#FFFFFF"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+  const RenderSelectedTimeCard = (time: string) => {
+    if (!selectedRestaurant) return null;
 
-          <View style={styles.timeOverlay}>
-            {restaurants[restaurantIndex].times.map((slot, slotIndex) => (
-              <TouchableOpacity
-                key={slotIndex}
-                style={[
-                  styles.timeSlot,
-                  slot.spots === 0 && styles.timeSlotDisabled,
-                ]}
-                disabled={slot.spots === 0}
-                onPress={() =>
-                  handleTimeSlotPress(restaurants[restaurantIndex], slot.time)
-                }>
-                <View style={styles.timeSlotContent}>
-                  <MaterialIcons
-                    name="access-time"
-                    size={hp('2.9%')}
-                    color={slot.spots === 0 ? '#4CAF50' : '#4CAF50'}
-                  />
-                  <Text
-                    style={[
-                      styles.timeText,
-                      slot.spots === 0 && styles.timeTextDisabled,
-                    ]}>
-                    {slot.time}
-                  </Text>
-                  <View
-                    style={[
-                      styles.spotsContainer,
-                      slot.spots === 0 && styles.spotsContainerDisabled,
-                    ]}>
-                    <Text style={styles.spotsText}>{slot.spots} spots</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ImageBackground>
-      </View>
-    </TouchableOpacity>
-  );
+    const handleIncrement = () => {
+      if (spotsCount < 4) setSpotsCount(prev => prev + 1);
+    };
 
-  const renderSingleImage = (imageUrl: string, restaurantIndex: number) => (
-    <TouchableOpacity
-      onPress={() => {
-        setSelectedRestaurant(restaurants[restaurantIndex]);
-        setSelectedTime(null);
-        setModalVisible(true);
-      }}>
-      <ImageBackground
-        source={{uri: imageUrl}}
-        style={styles.image}
-        resizeMode="cover">
-        <View style={styles.topOverlay}>
-          <View style={styles.profileContainer}>
-            <Image
-              source={{uri: restaurants[restaurantIndex].profileImage}}
-              style={styles.profileImage}
-              resizeMode="cover"
-            />
-            <Text style={styles.profileName}>
-              {restaurants[restaurantIndex].name}
-            </Text>
-          </View>
-          <View style={styles.iconContainer}>
-            <TouchableOpacity style={styles.iconButton}>
-              <MaterialCommunityIcons
-                name="message-arrow-right-outline"
-                size={hp('3%')}
-                color={'white'}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+    const handleDecrement = () => {
+      if (spotsCount > 0) setSpotsCount(prev => prev - 1);
+    };
+
+    const handleClaim = () => {
+      setSpotsCount(1);
+      navigation.navigate<any>('Claims');
+      setModalVisible(false);
+    };
+
+    return (
+      <View style={styles.selectedTimeCard}>
+        <View style={styles.selectedTimeCardInner}>
+          <View style={styles.timeRow}>
+            <View style={styles.timeLeft}>
               <MaterialIcons
-                name="favorite-border"
-                size={hp('3%')}
-                color="#FFFFFF"
+                name="access-time"
+                size={isTablet ? hp('1.8%') : hp('2.5%')}
+                color="#000000"
               />
+              <Text style={styles.timeText}>{time}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setSelectedTime(null)}
+              style={styles.changeButton}>
+              <MaterialIcons
+                name="refresh"
+                size={isTablet ? hp('2%') : hp('2.5%')}
+                color="#000000"
+              />
+              <Text style={styles.changeText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.spotsRow}>
+            <View style={styles.spotsLeft}>
+              <TouchableOpacity
+                onPress={handleDecrement}
+                style={styles.incrementDecrementButton}>
+                <Text style={styles.buttonText}>-</Text>
+              </TouchableOpacity>
+              <Text style={styles.spotsCountText}>{spotsCount}</Text>
+              <TouchableOpacity
+                onPress={handleIncrement}
+                style={styles.incrementDecrementButton}>
+                <Text style={styles.buttonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.claimButton} onPress={handleClaim}>
+              <Text style={styles.claimButtonText}>Claim</Text>
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.timeOverlay}>
-          {restaurants[restaurantIndex].times.map((slot, slotIndex) => (
-            <TouchableOpacity
-              key={slotIndex}
-              style={[
-                styles.timeSlot,
-                slot.spots === 0 && styles.timeSlotDisabled,
-              ]}
-              disabled={slot.spots === 0}
-              onPress={() =>
-                handleTimeSlotPress(restaurants[restaurantIndex], slot.time)
-              }>
-              <View style={styles.timeSlotContent}>
-                <MaterialIcons
-                  name="access-time"
-                  size={hp('2.9%')}
-                  color={slot.spots === 0 ? '#4CAF50' : '#4CAF50'}
+      </View>
+    );
+  };
+
+  const renderImageItem = ({item}: any, restaurantIndex: number) => {
+    const COLLAPSED_HEIGHT = isTablet ? hp('25%') : hp('22%');
+    const EXPANDED_HEIGHT = isTablet ? hp('60%') : hp('70%');
+    // const animatedHeight = useSharedValue(
+    //   isCarouselExpanded && restaurantIndex === 0
+    //     ? EXPANDED_HEIGHT
+    //     : COLLAPSED_HEIGHT,
+    // );
+
+    const toggleExpansion = () => {
+      if (restaurantIndex === 0) {
+        // Only apply to the carousel (first restaurant)
+        // animatedHeight.value = withSpring(
+        //   isCarouselExpanded ? COLLAPSED_HEIGHT : EXPANDED_HEIGHT,
+        //   {
+        //     damping: 0,
+        //     stiffness: 100,
+        //   },
+        // );
+        setIsCarouselExpanded(!isCarouselExpanded);
+        setExpandedCardIndex(isCarouselExpanded ? null : restaurantIndex);
+      }
+      setSelectedRestaurant(restaurants[restaurantIndex]);
+      setSelectedTime(null);
+    };
+
+    // const animatedContainerStyle = useAnimatedStyle(() => ({
+    //   width: '100%',
+    //   // height: animatedHeight.value,
+    //   overflow: 'hidden',
+    // }));
+
+    return (
+      <TouchableOpacity onPress={toggleExpansion}>
+        <Animated.View style={[styles.carouselItem]}>
+          <ImageBackground
+            source={{uri: item}}
+            style={styles.image}
+            resizeMode="cover">
+            <View style={styles.topOverlay}>
+              <View style={styles.profileContainer}>
+                <Image
+                  source={{uri: restaurants[restaurantIndex].profileImage}}
+                  style={styles.profileImage}
+                  resizeMode="cover"
                 />
-                <Text
-                  style={[
-                    styles.timeText,
-                    slot.spots === 0 && styles.timeTextDisabled,
-                  ]}>
-                  {slot.time}
+                <Text style={styles.profileName}>
+                  {restaurants[restaurantIndex].name}
                 </Text>
-                <View
-                  style={[
-                    styles.spotsContainer,
-                    slot.spots === 0 && styles.spotsContainerDisabled,
-                  ]}>
-                  <Text style={styles.spotsText}>{slot.spots} spots</Text>
-                </View>
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
+              <View style={styles.iconContainer}>
+                <TouchableOpacity style={styles.iconButton}>
+                  <MaterialCommunityIcons
+                    name="message-arrow-right-outline"
+                    size={hp('3%')}
+                    color={'white'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton}>
+                  <MaterialIcons
+                    name="favorite-border"
+                    size={hp('3%')}
+                    color="#FFFFFF"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.timeOverlay}>
+              {restaurants[restaurantIndex].times.map((slot, slotIndex) => (
+                <TouchableOpacity
+                  key={slotIndex}
+                  style={[
+                    styles.timeSlot,
+                    slot.spots === 0 && styles.timeSlotDisabled,
+                  ]}
+                  disabled={slot.spots === 0}
+                  onPress={() =>
+                    handleTimeSlotPress(restaurants[restaurantIndex], slot.time)
+                  }>
+                  <View style={styles.timeSlotContent}>
+                    <MaterialIcons
+                      name="access-time"
+                      size={hp('2.9%')}
+                      color={slot.spots === 0 ? '#4CAF50' : '#4CAF50'}
+                    />
+                    <Text
+                      style={[
+                        styles.timeText,
+                        slot.spots === 0 && styles.timeTextDisabled,
+                      ]}>
+                      {slot.time}
+                    </Text>
+                    <View
+                      style={[
+                        styles.spotsContainer,
+                        slot.spots === 0 && styles.spotsContainerDisabled,
+                      ]}>
+                      <Text style={styles.spotsText}>{slot.spots} spots</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ImageBackground>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  const [cardHeights, setCardHeights] = useState(
+    restaurants.map(() => ({
+      collapsed: isTablet ? hp('25%') : hp('22%'),
+      expanded: isTablet ? hp('60%') : hp('70%'),
+      current: isTablet ? hp('25%') : hp('22%'),
+    })),
   );
+
+  const toggleCardExpansion = (index: number) => {
+    setCardHeights(prev => {
+      const newHeights = [...prev];
+      const isCurrentlyExpanded =
+        newHeights[index].current === newHeights[index].expanded;
+
+      newHeights[index] = {
+        ...newHeights[index],
+        current: isCurrentlyExpanded
+          ? newHeights[index].collapsed
+          : newHeights[index].expanded,
+      };
+
+      return newHeights;
+    });
+  };
+
+  const renderSingleImage = (imageUrl: string, restaurantIndex: number) => {
+    const COLLAPSED_HEIGHT = isTablet ? hp('25%') : hp('22%');
+    const EXPANDED_HEIGHT = isTablet ? hp('60%') : hp('70%');
+    const animatedHeight = useSharedValue(COLLAPSED_HEIGHT);
+
+    const toggleExpansion = () => {
+      animatedHeight.value = withSpring(
+        isExpanded ? COLLAPSED_HEIGHT : EXPANDED_HEIGHT,
+        {
+          damping: 0,
+          stiffness: 100,
+        },
+      );
+      setIsExpanded(!isExpanded);
+      setExpandedCardIndex(isExpanded ? null : restaurantIndex);
+    };
+
+    const animatedContainerStyle = useAnimatedStyle(() => ({
+      width: '98%',
+      height: animatedHeight.value,
+      overflow: 'hidden',
+    }));
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => {
+          setSelectedRestaurant(restaurants[restaurantIndex]);
+          setSelectedTime(null);
+          toggleExpansion();
+        }}>
+        <Animated.View style={[animatedContainerStyle, styles.card]}>
+          <ImageBackground
+            source={{uri: imageUrl}}
+            style={{
+              width: '100%',
+              height: '100%',
+              justifyContent: 'space-between',
+            }}
+            resizeMode="cover">
+            <View style={styles.topOverlay}>
+              <View style={styles.profileContainer}>
+                <Image
+                  source={{uri: restaurants[restaurantIndex].profileImage}}
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+                <Text style={styles.profileName}>
+                  {restaurants[restaurantIndex].name}
+                </Text>
+              </View>
+              <View style={styles.iconContainer}>
+                <TouchableOpacity style={styles.iconButton}>
+                  <MaterialCommunityIcons
+                    name="message-arrow-right-outline"
+                    size={hp('2.5%')}
+                    color={'white'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton}>
+                  <MaterialIcons
+                    name="favorite-border"
+                    size={hp('2.5%')}
+                    color="#FFFFFF"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.timeOverlay}>
+              {isExpanded && selectedTime ? (
+                <>
+                  <View style={styles.offerContainer}>
+                    <Text style={styles.offerText}>
+                      {restaurants[restaurantIndex].offer}
+                    </Text>
+                  </View>
+                  {RenderSelectedTimeCard(selectedTime!)}
+                </>
+              ) : (
+                restaurants[restaurantIndex].times.map((slot, slotIndex) => (
+                  <TouchableOpacity
+                    key={slotIndex}
+                    style={[
+                      styles.timeSlot,
+                      slot.spots === 0 && styles.timeSlotDisabled,
+                    ]}
+                    disabled={slot.spots === 0}
+                    onPress={() => {
+                      handleTimeSlotPress(
+                        restaurants[restaurantIndex],
+                        slot.time,
+                      );
+                      toggleExpansion();
+                    }}>
+                    <View style={styles.timeSlotContent}>
+                      <MaterialIcons
+                        name="access-time"
+                        size={hp('2%')}
+                        color={slot.spots === 0 ? '#4CAF50' : '#4CAF50'}
+                      />
+                      <Text
+                        style={[
+                          styles.timeText,
+                          slot.spots === 0 && styles.timeTextDisabled,
+                        ]}>
+                        {slot.time}
+                      </Text>
+                      <View
+                        style={[
+                          styles.spotsContainer,
+                          slot.spots === 0 && styles.spotsContainerDisabled,
+                        ]}>
+                        <Text style={styles.spotsText}>{slot.spots} spots</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+          </ImageBackground>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderExpandedCard = () => {
     if (!selectedRestaurant) return null;
@@ -371,7 +579,6 @@ const RestaurantCard = () => {
             </View>
             <View style={styles.iconContainer}>
               <TouchableOpacity style={styles.iconButton}>
-                {/* <MaterialIcons name="share" size={hp('3%')} color="#FFFFFF" /> */}
                 <MaterialCommunityIcons
                   name="message-arrow-right-outline"
                   size={hp('3%')}
@@ -453,7 +660,7 @@ const RestaurantCard = () => {
         {restaurants.map((restaurant, index) => (
           <View
             key={index}
-            style={styles.card}
+            style={[styles.card, {}]}
             onLayout={event => onCardLayout(index, event)}>
             {restaurant.isCarousel &&
             restaurant.images &&
@@ -483,63 +690,6 @@ const RestaurantCard = () => {
           </View>
         ))}
       </ScrollView>
-      <View style={styles.upperToggleContainer}>
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              activeToggle === 'frshbites' && styles.activeToggleButton,
-            ]}
-            onPress={() => setActiveToggle('frshbites')}>
-            <Text
-              style={[
-                styles.toggleText,
-                {color: activeToggle === 'frshbites' ? 'white' : 'black'},
-              ]}>
-              frshbites
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              activeToggle === 'frshdeals' && styles.activeToggleButton,
-            ]}
-            onPress={() => setActiveToggle('frshdeals')}>
-            <Text
-              style={[
-                styles.toggleText,
-                {color: activeToggle === 'frshdeals' ? 'white' : 'black'},
-              ]}>
-              frshdeals
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <Modal
-        animationType="fade"
-        // backdropColor="red"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(false);
-          setSelectedRestaurant(null);
-          setSelectedTime(null);
-          setSpotsCount(1);
-        }}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => {
-              setModalVisible(false);
-              setSelectedRestaurant(null);
-              setSelectedTime(null);
-              setSpotsCount(1);
-            }}
-          />
-          {renderExpandedCard()}
-        </View>
-      </Modal>
     </>
   );
 };
@@ -547,19 +697,19 @@ const RestaurantCard = () => {
 export default RestaurantCard;
 
 const styles = StyleSheet.create({
+  offerContainer: {
+    position: 'absolute',
+    bottom: hp('11%'),
+    paddingHorizontal: wp('3.5%'),
+  },
   container: {
-    flex: 1,
     width: '100%',
-    height: '100%',
-    backgroundColor: '#FFFFFF',
   },
-  scrollContentContainer: {
-    paddingBottom: hp('20%'),
-  },
+  scrollContentContainer: {},
   card: {
     marginVertical: hp('1%'),
-    marginHorizontal: wp('2%'),
-    borderRadius: 15,
+    marginHorizontal: wp('1%'),
+    borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
     elevation: 3,
@@ -644,11 +794,7 @@ const styles = StyleSheet.create({
     gap: wp('3%'),
     width: '100%',
   },
-  offerContainer: {
-    position: 'absolute',
-    bottom: isTablet ? hp('10%') : hp('9%'),
-    paddingHorizontal: wp('3%'),
-  },
+
   timeSlot: {
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -722,7 +868,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -741,17 +886,14 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   selectedTimeCard: {
-    position: 'absolute',
-    bottom: hp('2%'),
-    paddingHorizontal: wp('3.5%'),
-    width: '96%',
-    alignItems: 'center',
+    marginTop: hp('8%'),
+    width: '100%',
   },
   selectedTimeCardInner: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    width: '96%',
-    paddingVertical: isTablet ? hp('1%') : hp('1.5%'),
+    width: '100%',
+    paddingVertical: isTablet ? hp('1%') : hp('1%'),
     paddingHorizontal: wp('3%'),
     elevation: 2,
     shadowOpacity: 0.2,
@@ -827,23 +969,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',
-    bottom: hp('8%'),
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: hp('1.5%'),
+    backgroundColor: 'red',
+    paddingVertical: hp('8.5%'),
   },
   toggleContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    // justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 0.5,
     borderRadius: 50,
-    width: wp('60%'), // Adjusted width to accommodate text
+    width: wp('60%'),
     height: hp('5%'),
-    // alignItems: 'center',
     justifyContent: 'center',
     gap: wp('1%'),
     paddingHorizontal: wp('1%'),
@@ -853,7 +989,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: hp('4.7%'),
-    width: wp('29%'), // Adjusted width to fit text
+    width: wp('29%'),
     borderRadius: 50,
   },
   activeToggleButton: {

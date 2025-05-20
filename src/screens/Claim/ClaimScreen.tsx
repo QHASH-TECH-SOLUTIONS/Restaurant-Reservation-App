@@ -8,7 +8,7 @@ const ClaimsScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.innerContainer}>
-        <CuisineFilter />
+        {/* <CuisineFilter /> */}
         <ClaimsCard />
       </View>
     </SafeAreaView>

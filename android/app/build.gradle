@@ -8,7 +8,7 @@ apply plugin: "com.facebook.react"
  */
 
 project.ext.vectoricons = [
-    iconFontNames: ['AntDesign.ttf', 'Entypo.ttf', 'EvilIcons.ttf', 'Ionicons.ttf','MaterialCommunityIcons.ttf','Octicons.ttf' ] // Specify font files
+    iconFontNames: ['AntDesign.ttf', 'Entypo.ttf', 'EvilIcons.ttf', 'Ionicons.ttf','MaterialCommunityIcons.ttf','Octicons.ttf','Feather.ttf','FontAwesome.ttf','FontAwesome6.ttf','Fontisto.ttf' ,'MaterialIcons.ttf','SimpleLineIcons.ttf','Zocial.ttf'] // Specify font files
 ]
 
 react {
