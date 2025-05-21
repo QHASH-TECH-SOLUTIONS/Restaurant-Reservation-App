@@ -3,26 +3,31 @@ import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CuisineFilter from '../../components/Home/CuisineFilter';
 import {ClaimsCard} from '../../components/Claims';
+import ToggleButton from '../../components/TabView/TabView';
 
 const ClaimsScreen = () => {
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <>
       <View style={styles.innerContainer}>
-        {/* <CuisineFilter /> */}
         <ClaimsCard />
       </View>
-    </SafeAreaView>
+      <View style={styles.toggleContainer}>
+        <ToggleButton />
+      </View>
+    </>
   );
 };
 
 export default ClaimsScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  innerContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  innerContainer: {
-    flex: 1,
+  toggleContainer: {
+    alignItems: 'center',
+    // flex: 1,
+    height: '19%',
   },
 });

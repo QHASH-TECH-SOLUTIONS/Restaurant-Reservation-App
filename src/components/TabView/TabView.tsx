@@ -78,13 +78,12 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: moderateScale(25),
     width: horizontalScale(320),
-    paddingVertical: moderateScale(4),
   },
   toggleButton: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    height: verticalScale(40),
+    height: verticalScale(45),
     borderRadius: moderateScale(25),
   },
   activeToggleButton: {

@@ -18,19 +18,25 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 const {width} = Dimensions.get('window');
 const isTablet = width > 768; // Detect if the device is a tablet
+type RootStackParamList = {
+  Search: undefined;
+  // add other routes here if needed
+};
 
 const CuisineFilter = () => {
-  const navigation = useNavigation();
-  const cuisines = [
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const cuisines: any[] = [
     {name: 'Italian', icon: 'pizza', library: 'MaterialCommunityIcons'},
     {name: 'Asian', icon: 'rice', library: 'MaterialCommunityIcons'},
     {name: 'Seafood', icon: 'fish', library: 'MaterialCommunityIcons'},
-    {name: 'Mexican', icon: 'mug-hot', library: 'FontAwesome6'},
+    {name: 'Mexican', icon: 'taco', library: 'MaterialCommunityIcons'},
     {name: 'Cafe', icon: 'coffee', library: 'MaterialCommunityIcons'},
-    {name: 'American', icon: 'utensils', library: 'FontAwesome6'},
+    {name: 'American', icon: 'hamburger', library: 'MaterialCommunityIcons'},
     {name: 'International', icon: 'earth', library: 'MaterialCommunityIcons'},
   ];
 
@@ -60,19 +66,18 @@ const CuisineFilter = () => {
 
   return (
     <View style={styles.container}>
-      {/* Left-side icons (Search and Heart) */}
       <View style={styles.iconContainer}>
         <TouchableOpacity onPress={() => navigation.navigate('Search')}>
           <FeatherIcon
             name="search"
-            size={isTablet ? hp('2%') : hp('3%')}
+            size={isTablet ? hp('2%') : hp('2.5%')}
             color="gray"
           />
         </TouchableOpacity>
         <TouchableOpacity style={styles.heartIcon}>
           <MaterialIcons
-            name="favorite-border"
-            size={isTablet ? hp('2%') : hp('3%')}
+            name="favorite"
+            size={isTablet ? hp('2%') : hp('2.5%')}
             color="#4CAF50"
           />
         </TouchableOpacity>
@@ -128,7 +133,7 @@ const styles = StyleSheet.create({
     marginLeft: wp('3%'),
   },
   heartIcon: {
-    marginLeft: wp('2%'),
+    marginLeft: wp('4%'),
   },
   scrollContainer: {
     flex: 1,

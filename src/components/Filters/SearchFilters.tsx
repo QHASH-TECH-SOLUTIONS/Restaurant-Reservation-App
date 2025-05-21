@@ -18,7 +18,9 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import {SafeAreaView} from 'react-native';
-import Slider from '@react-native-community/slider';
+import {useSharedValue} from 'react-native-reanimated';
+import {Slider} from 'react-native-awesome-slider';
+import LinearGradient from 'react-native-linear-gradient';
 
 const {width} = Dimensions.get('window');
 const isTablet = width > 768;
@@ -30,9 +32,13 @@ const Filters = () => {
   const [inputValue, setInputValue] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeAllergy, setActiveAllergy] = useState<string | null>(null);
-  const [heatLevel, setHeatLevel] = useState(0);
+  const [heatLevelIndex, setHeatLevelIndex] = useState(1); // Default to Spicy (index 1)
   const [activeIcon, setActiveIcon] = useState('location'); // 'location' or 'deal'
   const navigation = useNavigation();
+
+  const progress = useSharedValue(33.33); // Default to 33.33% (Spicy)
+  const min = useSharedValue(0);
+  const max = useSharedValue(100);
 
   const cuisines = [
     {name: 'Italian', icon: 'food-fork-drink'},
@@ -51,7 +57,24 @@ const Filters = () => {
     {name: 'Nut Free', icon: 'peanut-off'},
   ];
 
-  const heatLevels = ['Mild', 'Spicy', 'Hot']; // Updated to include Spicy
+  const heatLevels = ['Mild', 'Spicy', 'Hot'];
+
+  const handleSliderValueChange = (value: number) => {
+    const step = 100 / (heatLevels.length - 1);
+    const newIndex = Math.round(value / step);
+    const clampedIndex = Math.min(Math.max(newIndex, 0), heatLevels.length - 1);
+    setHeatLevelIndex(clampedIndex);
+    progress.value = clampedIndex * step;
+  };
+
+  const renderTrack = () => (
+    <LinearGradient
+      colors={['#FF9800', '#FF5722']} // Gradient from orange to red
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 0}}
+      style={styles.gradientTrack}
+    />
+  );
 
   const renderCuisineItem = ({item}: {item: {name: string; icon: string}}) => (
     <TouchableOpacity
@@ -103,124 +126,115 @@ const Filters = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons
-              name={'arrow-back-outline'}
-              size={wp('6%')}
-              color={'#000000'}
-            />
-          </TouchableOpacity>
-          <View style={styles.inputContainer}>
-            <View style={styles.toggleContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  activeIcon === 'location' && styles.activeToggleButton,
-                ]}
-                onPress={() => setActiveIcon('location')}>
-                <Ionicons
-                  name="location-outline"
-                  size={wp('5%')}
-                  color={activeIcon === 'location' ? '#4CAF50' : '#666666'}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  activeIcon === 'deal' && styles.activeToggleButton,
-                ]}
-                onPress={() => setActiveIcon('deal')}>
-                <Ionicons
-                  name="pricetag-outline"
-                  size={wp('5%')}
-                  color={activeIcon === 'deal' ? '#4CAF50' : '#666666'}
-                />
-              </TouchableOpacity>
-            </View>
-            <TextInput
-              value={inputValue}
-              onChangeText={setInputValue}
-              placeholder={
-                activeIcon === 'location'
-                  ? 'Enter address'
-                  : 'What are you craving?'
-              }
-              style={styles.inputField}
-              placeholderTextColor={'#666666'}
-            />
-            <Ionicons
-              name="search"
-              size={wp('5%')}
-              color={'#666666'}
-              style={styles.inputIcon}
-            />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons
+            name={'arrow-back-outline'}
+            size={wp('6%')}
+            color={'#000000'}
+          />
+        </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                activeIcon === 'location' && styles.activeToggleButton,
+              ]}
+              onPress={() => setActiveIcon('location')}>
+              <Ionicons
+                name="location-outline"
+                size={wp('5%')}
+                color={activeIcon === 'location' ? '#4CAF50' : '#666666'}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                activeIcon === 'deal' && styles.activeToggleButton,
+              ]}
+              onPress={() => setActiveIcon('deal')}>
+              <Ionicons
+                name="pricetag-outline"
+                size={wp('5%')}
+                color={activeIcon === 'deal' ? '#4CAF50' : '#666666'}
+              />
+            </TouchableOpacity>
           </View>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Favorite Cuisines</Text>
-          <FlatList
-            data={cuisines}
-            renderItem={renderCuisineItem}
-            keyExtractor={item => item.name}
-            horizontal={false}
-            scrollEnabled
-            numColumns={NUM_COLUMNS_CUISINES}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.filterContainer}
+          <TextInput
+            value={inputValue}
+            onChangeText={setInputValue}
+            placeholder={
+              activeIcon === 'location'
+                ? 'Enter address'
+                : 'What are you craving?'
+            }
+            style={styles.inputField}
+            placeholderTextColor={'#666666'}
+          />
+          <Ionicons
+            name="search"
+            size={wp('5%')}
+            color={'#666666'}
+            style={styles.inputIcon}
           />
         </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Allergies & Restrictions</Text>
-          <FlatList
-            data={allergies}
-            renderItem={renderAllergyItem}
-            keyExtractor={item => item.name}
-            horizontal={false}
-            scrollEnabled
-            numColumns={NUM_COLUMNS_ALLERGIES}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.filterContainer}
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Favorite Cuisines</Text>
+        <FlatList
+          data={cuisines}
+          renderItem={renderCuisineItem}
+          keyExtractor={item => item.name}
+          horizontal={false}
+          scrollEnabled
+          numColumns={NUM_COLUMNS_CUISINES}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.filterContainer}
+        />
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Allergies & Restrictions</Text>
+        <FlatList
+          data={allergies}
+          renderItem={renderAllergyItem}
+          keyExtractor={item => item.name}
+          horizontal={false}
+          scrollEnabled
+          numColumns={NUM_COLUMNS_ALLERGIES}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.filterContainer}
+        />
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Preferred Heat Level</Text>
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={styles.slider}
+            progress={progress}
+            minimumValue={min}
+            maximumValue={max}
+            // step={100 / (heatLevels.length - 1)} // Step size for 3 values
+            onValueChange={handleSliderValueChange}
+            renderTrack={renderTrack}
+            // renderBubble={() => null} // Disable bubble for cleaner look
+            // minimumTrackTintColor="#FF5722"
+            // maximumTrackTintColor="#E0E0E0"
+            renderThumb={() => <View style={styles.thumb} />}
+            thumbWidth={25}
+            sliderHeight={10}
           />
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferred Heat Level</Text>
-          <View style={styles.sliderContainer}>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={2} // Set to 2 for 3 levels: Mild (0), Spicy (1), Hot (2)
-              step={1}
-              value={heatLevel}
-              onValueChange={setHeatLevel}
-              minimumTrackTintColor="#FF5722"
-              maximumTrackTintColor="#E0E0E0"
-              thumbTintColor="gray"
-              thumbStyle={styles.thumb}
-            />
-            <View style={styles.sliderLabel}>
-              <Icon name="chili-hot" size={wp('6%')} color="#FF5722" />
-              <Text style={styles.sliderText}>
-                {heatLevels[Math.round(heatLevel)]}
-              </Text>
-            </View>
+          <View style={styles.sliderLabel}>
+            <Icon name="chili-hot" size={wp('6%')} color="#FF5722" />
+            <Text style={styles.sliderText}>{heatLevels[heatLevelIndex]}</Text>
           </View>
         </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.applyButton}>
-            <Text style={styles.applyButtonText}>Apply Filters</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      {/* <View style={styles.bottomToggleContainer}>
-        <TouchableOpacity style={styles.bottomToggleButton}>
-          <Text style={styles.bottomToggleText}>frshbites</Text>
+      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.applyButton}>
+          <Text style={styles.applyButtonText}>Apply Filters</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.bottomToggleButtonActive}>
-          <Text style={styles.bottomToggleText}>frshdeals</Text>
-        </TouchableOpacity>
-      </View> */}
+      </View>
     </SafeAreaView>
   );
 };
@@ -232,15 +246,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  scrollViewContent: {
-    paddingBottom: hp('10%'),
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Platform.OS === 'ios' ? hp('3%') : hp('5%'),
     paddingHorizontal: wp('3%'),
-    paddingVertical: hp('2%'),
+    paddingVertical: hp('1%'),
     backgroundColor: '#FFFFFF',
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -364,28 +375,35 @@ const styles = StyleSheet.create({
     paddingVertical: hp('1%'),
   },
   slider: {
-    width: '100%',
-    height: hp('5%'),
+    width: '90%',
+    alignSelf: 'center',
+    height: hp('7%'),
+    // borderRadius: wp('80%'),
   },
   thumb: {
-    width: wp('6%'),
+    width: wp('10%'),
     height: wp('6%'),
-    borderRadius: wp('50%'),
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#FF5722',
+    borderRadius: wp('40%'),
+    backgroundColor: '#f0f0f0',
+    // borderWidth: 2,
+    // elevation: 1,
+    // borderColor: '#FF5722',
   },
   sliderLabel: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: hp('1%'),
+    marginTop: hp('5%'),
   },
   sliderText: {
     fontSize: isTablet ? wp('4%') : wp('4.5%'),
     color: '#333',
     marginLeft: wp('1%'),
     fontWeight: '600',
+  },
+  gradientTrack: {
+    height: 10,
+    borderRadius: 5,
   },
   buttonContainer: {
     paddingHorizontal: wp('3%'),
@@ -403,41 +421,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: isTablet ? wp('4%') : wp('4.5%'),
     fontWeight: '600',
-  },
-  bottomToggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: hp('1.5%'),
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    shadowOffset: {width: 0, height: -1},
-  },
-  bottomToggleButton: {
-    paddingHorizontal: wp('6%'),
-    paddingVertical: hp('1.5%'),
-    borderRadius: 20,
-    backgroundColor: '#E0E0E0',
-    marginHorizontal: wp('2%'),
-  },
-  bottomToggleButtonActive: {
-    paddingHorizontal: wp('6%'),
-    paddingVertical: hp('1.5%'),
-    borderRadius: 20,
-    backgroundColor: '#4CAF50',
-    marginHorizontal: wp('2%'),
-  },
-  bottomToggleText: {
-    fontSize: isTablet ? wp('4%') : wp('4.5%'),
-    color: '#333',
-    fontWeight: '600',
-    textAlign: 'center',
   },
 });

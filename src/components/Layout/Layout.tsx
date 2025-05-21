@@ -3,8 +3,6 @@ import {StyleSheet, View, StatusBar, Platform} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {CuisineFilter} from '../Home';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import ToggleButton from '../ToogleButton/ToggleButton';
-import BottomNavigation from '../../navigation/BottomNavigation';
 
 const Layout = ({children}: any) => {
   const insets = useSafeAreaInsets();

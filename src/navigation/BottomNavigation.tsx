@@ -32,7 +32,7 @@ const BottomNavigation = () => {
         tabBarIcon: ({color, size}) => {
           const iconSize = isTablet ? hp('2.5%') : hp('3%');
           if (route.name === 'Deals') {
-            return <AntDesign name="tago" size={iconSize} color={color} />;
+            return <AntDesign name="tag" size={iconSize} color={color} />;
           } else if (route.name === 'Claims') {
             return <Octicons name="verified" size={iconSize} color={color} />;
           } else if (route.name === 'Alerts') {

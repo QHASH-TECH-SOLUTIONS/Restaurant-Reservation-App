@@ -35,49 +35,48 @@ const DetailsScreen = ({navigation}) => (
 
 const AppNavigator = () => {
   return (
-    <Layout>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#FFFFFF',
-            elevation: 2,
-            shadowOpacity: 0.1,
-            shadowRadius: 3,
-            shadowOffset: {width: 0, height: 1},
-          },
-          headerTintColor: '#333',
-          headerTitleStyle: {
-            fontSize: isTablet ? wp('4.5%') : wp('5%'),
-            fontWeight: '600',
-          },
-          headerLeft: ({canGoBack, navigation}) =>
-            canGoBack && (
-              <TouchableOpacity
-                style={styles.headerLeft}
-                onPress={() => navigation.goBack()}>
-                <Ionicons
-                  name="arrow-back-outline"
-                  size={isTablet ? wp('6%') : wp('7%')}
-                  color="#333"
-                />
-              </TouchableOpacity>
-            ),
-        }}>
-        <Stack.Screen
-          name="MainTabs"
-          component={BottomNavigation}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="Search"
-          component={SearchFilters}
-          options={{
-            headerShown: false,
-          }}
-          // options={{title: 'Search Filters'}}
-        />
-      </Stack.Navigator>
-    </Layout>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#FFFFFF',
+          elevation: 2,
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          shadowOffset: {width: 0, height: 1},
+        },
+        headerTintColor: '#333',
+        headerTitleStyle: {
+          fontSize: isTablet ? wp('4.5%') : wp('5%'),
+          fontWeight: '600',
+        },
+        headerLeft: ({canGoBack, navigation}) =>
+          canGoBack && (
+            <TouchableOpacity
+              style={styles.headerLeft}
+              onPress={() => navigation.goBack()}>
+              <Ionicons
+                name="arrow-back-outline"
+                size={isTablet ? wp('6%') : wp('7%')}
+                color="#333"
+              />
+            </TouchableOpacity>
+          ),
+      }}>
+      <Stack.Screen
+        name="MainTabs"
+        component={() => (
+          <Layout>
+            <BottomNavigation />
+          </Layout>
+        )}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Search"
+        component={SearchFilters}
+        options={{headerShown: false}}
+      />
+    </Stack.Navigator>
   );
 };
 
