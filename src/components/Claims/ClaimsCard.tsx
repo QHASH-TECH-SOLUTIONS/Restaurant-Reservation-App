@@ -482,8 +482,10 @@ const styles = StyleSheet.create({
   discoverContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '47%',
+    justifyContent: 'space-evenly',
+    // backgroundColor: 'red',
+    width: wp('46'),
+    // paddingHorizontal: wp('5%'),
     marginTop: hp('3%'),
   },
   discoverText: {

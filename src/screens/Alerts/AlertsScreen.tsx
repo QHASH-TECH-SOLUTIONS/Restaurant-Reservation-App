@@ -6,12 +6,12 @@ import {AlertCard} from '../../components/Alerts';
 
 const AlertsScreen = () => {
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.innerContainer}>
-        <CuisineFilter />
-        <AlertCard />
-      </View>
-    </SafeAreaView>
+    // <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <View style={styles.innerContainer}>
+      {/* <CuisineFilter /> */}
+      <AlertCard />
+    </View>
+    // </SafeAreaView>
   );
 };
 

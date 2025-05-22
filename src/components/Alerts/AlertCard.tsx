@@ -100,6 +100,8 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#F5F5F5',
+    borderWidth: 0.3,
+    borderColor: 'red',
     borderRadius: wp('3%'),
     marginBottom: hp('2%'),
     overflow: 'hidden',
