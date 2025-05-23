@@ -170,9 +170,11 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#F5F5F5',
-    borderRadius: wp('2%'),
+    borderWidth: 0.3,
+    borderColor: 'red',
+    borderRadius: wp('3%'),
     marginBottom: hp('2%'),
-    borderWidth: 0.15,
+    // borderWidth: 0.15,
     overflow: 'hidden',
   },
   header: {

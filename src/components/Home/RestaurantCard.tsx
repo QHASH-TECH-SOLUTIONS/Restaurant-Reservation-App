@@ -64,7 +64,7 @@ const RestaurantCard = () => {
       times: [
         {
           time: '5:00 PM',
-          spots: restaurantSpots["Joe's Stone Crab"]?.['5:00 PM'] || 5,
+          spots: restaurantSpots["Joe's Stone Crab"]?.['5:00 PM'] || 1,
         },
         {
           time: '6:00 PM',
@@ -123,19 +123,19 @@ const RestaurantCard = () => {
       times: [
         {
           time: '5:00 PM',
-          spots: restaurantSpots['LPM Restaurant']?.['5:00 PM'] || 5,
-        },
-        {
-          time: '6:00 PM',
-          spots: restaurantSpots['LPM Restaurant']?.['6:00 PM'] || 3,
+          spots: restaurantSpots['LPM Restaurant']?.['5:00 PM'] || 4,
         },
         {
           time: '7:00 PM',
-          spots: restaurantSpots['LPM Restaurant']?.['7:00 PM'] || 2,
+          spots: restaurantSpots['LPM Restaurant']?.['7:00 PM'] || 3,
         },
         {
           time: '8:00 PM',
-          spots: restaurantSpots['LPM Restaurant']?.['8:00 PM'] || 4,
+          spots: restaurantSpots['LPM Restaurant']?.['8:00 PM'] || 2,
+        },
+        {
+          time: '9:00 PM',
+          spots: restaurantSpots['LPM Restaurant']?.['9:00 PM'] || 4,
         },
       ],
       profileImage:
@@ -501,20 +501,171 @@ const RestaurantCard = () => {
     );
   };
 
-  const renderImageItem = (
-    {item}: {item: any},
-    restaurantIndex: number,
-    isExpanded: boolean,
-    toggleExpansion: () => void,
-    selectedTime: string | null,
-  ) => {
+  const ImageItem = ({
+    item,
+    restaurantIndex,
+    isExpanded,
+    toggleExpansion,
+    selectedTime,
+    setSelectedTime,
+    setSelectedRestaurant,
+  }: {
+    item: string;
+    restaurantIndex: number;
+    isExpanded: boolean;
+    toggleExpansion: () => void;
+    selectedTime: string | null;
+    setSelectedTime: (time: string | null) => void;
+    setSelectedRestaurant: (restaurant: any) => void;
+  }) => {
+    const renderSelectedTimeCard = (
+      time: string | null,
+      restaurant: any,
+      restaurantIndex: number,
+    ) => {
+      const handleIncrement = () => {
+        if (spotsCount < 4) {
+          setSpotsCount(prev => prev + 1);
+        }
+      };
+
+      const currentSpots =
+        restaurantSpots[restaurant.name]?.[time as string] || 0;
+      if (currentSpots <= 0) {
+        console.log('No spots available for claim');
+        return null;
+      }
+
+      const handleDecrement = () => {
+        if (spotsCount > 1) {
+          setSpotsCount(prev => prev - 1);
+        }
+      };
+
+      const handleClaim = () => {
+        const currentDate = new Date().toLocaleDateString('en-US', {
+          month: 'numeric',
+          day: 'numeric',
+          year: 'numeric',
+        });
+
+        const currentSpots =
+          restaurantSpots[restaurant.name]?.[time as string] || 0;
+        if (currentSpots <= 0) {
+          console.log('No spots available for claim');
+          return;
+        }
+
+        const newSpots = Math.max(currentSpots - 1, 0);
+
+        dispatch(
+          addClaim({
+            id: `${Date.now()}`,
+            restaurant_name: restaurant.name,
+            location: '123 Main St, Miami, FL',
+            time: time ?? '',
+            slot: spotsCount,
+            current_date: currentDate,
+            profileImage: restaurant.profileImage,
+          }),
+        );
+
+        console.log(
+          'Claiming:',
+          restaurant.name,
+          time,
+          'Old spots:',
+          currentSpots,
+          'New spots:',
+          newSpots,
+          'Party size:',
+          spotsCount,
+        );
+
+        dispatch(
+          updateSpots({
+            restaurantName: restaurant.name,
+            time: time ?? '',
+            spots: newSpots,
+          }),
+        );
+
+        setSpotsCount(1);
+        setSelectedTimes(prev => ({
+          ...prev,
+          [restaurantIndex]: null,
+        }));
+        toggleExpansion();
+        setExpandedCardIndex(null);
+        setTimeout(() => {
+          navigation.navigate({name: 'Claims', params: {showToast: true}});
+        }, 400);
+      };
+
+      return (
+        <TouchableWithoutFeedback>
+          <View style={styles.selectedTimeCardInner}>
+            <View style={styles.timeRow}>
+              <View style={styles.timeLeft}>
+                <MaterialIcons
+                  name="access-time"
+                  size={isTablet ? hp('1.8%') : hp('2.5%')}
+                  color="#000000"
+                />
+                <Text style={styles.timeText}>{time}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedTimes(prev => ({
+                    ...prev,
+                    [restaurantIndex]: null,
+                  }));
+                  toggleExpansion();
+                  setExpandedCardIndex(null);
+                }}
+                style={styles.changeButton}>
+                <MaterialIcons
+                  name="refresh"
+                  size={isTablet ? hp('2%') : hp('2.5%')}
+                  color="#000000"
+                />
+                <Text style={styles.changeText}>Change</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.spotsRow}>
+              <View style={styles.spotsLeft}>
+                <TouchableOpacity
+                  onPress={handleDecrement}
+                  style={styles.incrementDecrementButton}>
+                  <Text style={styles.buttonText}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.spotsCountText}>{spotsCount}</Text>
+                <TouchableOpacity
+                  onPress={handleIncrement}
+                  style={styles.incrementDecrementButton}>
+                  <Text style={styles.buttonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.claimButton}
+                onPress={handleClaim}>
+                <Text style={styles.claimButtonText}>Claim</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      );
+    };
+
     return (
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => {
+          setSelectedRestaurant(restaurants[restaurantIndex]);
+          setSelectedTime(null);
           toggleExpansion();
         }}>
-        <View style={[styles.carouselItem]}>
+        <View style={styles.carouselItem}>
           <ImageBackground
             source={{uri: item}}
             style={styles.image}
@@ -530,19 +681,19 @@ const RestaurantCard = () => {
                   {restaurants[restaurantIndex].name}
                 </Text>
               </View>
-              {isExpanded ? (
+              {isExpanded && (
                 <View style={styles.categoryContainer}>
                   <Text style={styles.categoryText}>
                     {restaurants[restaurantIndex].category}
                   </Text>
                 </View>
-              ) : null}
+              )}
               <View style={styles.iconContainer}>
                 <TouchableOpacity style={styles.iconButton}>
                   <MaterialCommunityIcons
                     name="message-arrow-right-outline"
                     size={hp('2.5%')}
-                    color={'white'}
+                    color="white"
                   />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton}>
@@ -563,70 +714,73 @@ const RestaurantCard = () => {
                       {restaurants[restaurantIndex].offer}
                     </Text>
                   </View>
-                  {RenderSelectedTimeCard(
+                  {renderSelectedTimeCard(
                     selectedTime,
                     restaurants[restaurantIndex],
                     restaurantIndex,
-                    toggleExpansion,
                   )}
                 </>
               ) : (
-                <>
-                  {restaurants[restaurantIndex].times.map((slot, slotIndex) => (
-                    <React.Fragment key={slotIndex}>
-                      <View
-                        style={[
-                          styles.offerContainer,
-                          {bottom: isExpanded ? wp('15%') : wp('14.5%')},
-                        ]}>
-                        <Text style={styles.offerText}>
-                          {restaurants[restaurantIndex].offer}
+                restaurants[restaurantIndex].times.map((slot, slotIndex) => (
+                  <React.Fragment key={slotIndex}>
+                    <View
+                      style={[
+                        styles.offerContainer,
+                        {bottom: isExpanded ? wp('15%') : wp('14.5%')},
+                      ]}>
+                      <Text style={styles.offerText}>
+                        {restaurants[restaurantIndex].offer}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[
+                        styles.timeSlot,
+                        slot.spots === 0 && styles.timeSlotDisabled,
+                      ]}
+                      disabled={slot.spots === 0}
+                      onPress={() => {
+                        console.log(slot.time, 'slot time');
+                        setSelectedTime(slot.time);
+                        setSelectedRestaurant(restaurants[restaurantIndex]);
+                        handleTimeSlotPress(
+                          restaurants[restaurantIndex],
+                          slot.time,
+                          restaurantIndex,
+                        );
+                        if (!isExpanded) {
+                          toggleExpansion(); // Expand card if collapsed
+                        }
+                      }}>
+                      <View style={styles.timeSlotContent}>
+                        <MaterialIcons
+                          name="access-time"
+                          size={hp('2.9%')}
+                          color={slot.spots === 0 ? '#888' : '#4CAF50'}
+                        />
+                        <Text
+                          style={[
+                            styles.timeText,
+                            slot.spots === 0 && styles.timeTextDisabled,
+                          ]}>
+                          {slot.time}
                         </Text>
-                      </View>
-                      <TouchableOpacity
-                        style={[
-                          styles.timeSlot,
-                          slot.spots === 0 && styles.timeSlotDisabled,
-                        ]}
-                        disabled={slot.spots === 0}
-                        onPress={() => {
-                          handleTimeSlotPress(
-                            restaurants[restaurantIndex],
-                            slot.time,
-                            restaurantIndex,
-                          );
-                        }}>
-                        <View style={styles.timeSlotContent}>
-                          <MaterialIcons
-                            name="access-time"
-                            size={hp('2.9%')}
-                            color={slot.spots === 0 ? '#888' : '#4CAF50'}
-                          />
+                        <View
+                          style={[
+                            styles.spotsContainer,
+                            slot.spots === 0 && styles.spotsContainerDisabled,
+                          ]}>
                           <Text
                             style={[
-                              styles.timeText,
-                              slot.spots === 0 && styles.timeTextDisabled,
+                              styles.spotsText,
+                              slot.spots === 0 && styles.spotsTextDisabled,
                             ]}>
-                            {slot.time}
+                            {slot.spots} spots
                           </Text>
-                          <View
-                            style={[
-                              styles.spotsContainer,
-                              slot.spots === 0 && styles.spotsContainerDisabled,
-                            ]}>
-                            <Text
-                              style={[
-                                styles.spotsText,
-                                slot.spots === 0 && styles.spotsTextDisabled,
-                              ]}>
-                              {slot.spots} spots
-                            </Text>
-                          </View>
                         </View>
-                      </TouchableOpacity>
-                    </React.Fragment>
-                  ))}
-                </>
+                      </View>
+                    </TouchableOpacity>
+                  </React.Fragment>
+                ))
               )}
             </View>
           </ImageBackground>
@@ -641,7 +795,9 @@ const RestaurantCard = () => {
     const animatedHeight = useSharedValue(COLLAPSED_HEIGHT);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
-    const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+    const [selectedRestaurant, setSelectedRestaurant] = useState<any | null>(
+      null,
+    );
 
     const toggleExpansion = () => {
       animatedHeight.value = withSpring(
@@ -660,6 +816,145 @@ const RestaurantCard = () => {
       height: animatedHeight.value,
       overflow: 'hidden',
     }));
+
+    const renderSelectedTimeCard = (
+      time: string | null,
+      restaurant: any,
+      restaurantIndex: number,
+    ) => {
+      const handleIncrement = () => {
+        if (spotsCount < 4) {
+          setSpotsCount(prev => prev + 1);
+        }
+      };
+
+      const currentSpots =
+        restaurantSpots[restaurant.name]?.[time as string] || 0;
+      if (currentSpots <= 0) {
+        console.log('No spots available for claim');
+        return null;
+      }
+
+      const handleDecrement = () => {
+        if (spotsCount > 1) {
+          setSpotsCount(prev => prev - 1);
+        }
+      };
+
+      const handleClaim = () => {
+        const currentDate = new Date().toLocaleDateString('en-US', {
+          month: 'numeric',
+          day: 'numeric',
+          year: 'numeric',
+        });
+
+        const currentSpots =
+          restaurantSpots[restaurant.name]?.[time as string] || 0;
+        if (currentSpots <= 0) {
+          console.log('No spots available for claim');
+          return;
+        }
+
+        const newSpots = Math.max(currentSpots - 1, 0);
+
+        dispatch(
+          addClaim({
+            id: `${Date.now()}`,
+            restaurant_name: restaurant.name,
+            location: '123 Main St, Miami, FL',
+            time: time ?? '',
+            slot: spotsCount,
+            current_date: currentDate,
+            profileImage: restaurant.profileImage,
+          }),
+        );
+
+        console.log(
+          'Claiming:',
+          restaurant.name,
+          time,
+          'Old spots:',
+          currentSpots,
+          'New spots:',
+          newSpots,
+          'Party size:',
+          spotsCount,
+        );
+
+        dispatch(
+          updateSpots({
+            restaurantName: restaurant.name,
+            time: time ?? '',
+            spots: newSpots,
+          }),
+        );
+
+        setSpotsCount(1);
+        setSelectedTimes(prev => ({
+          ...prev,
+          [restaurantIndex]: null,
+        }));
+        toggleExpansion();
+        setExpandedCardIndex(null);
+        setTimeout(() => {
+          navigation.navigate({name: 'Claims', params: {showToast: true}});
+        }, 400);
+      };
+
+      return (
+        <TouchableWithoutFeedback>
+          <View style={styles.selectedTimeCardInner}>
+            <View style={styles.timeRow}>
+              <View style={styles.timeLeft}>
+                <MaterialIcons
+                  name="access-time"
+                  size={isTablet ? hp('1.8%') : hp('2.5%')}
+                  color="#000000"
+                />
+                <Text style={styles.timeText}>{time}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedTimes(prev => ({
+                    ...prev,
+                    [restaurantIndex]: null,
+                  }));
+                  toggleExpansion();
+                  setExpandedCardIndex(null);
+                }}
+                style={styles.changeButton}>
+                <MaterialIcons
+                  name="refresh"
+                  size={isTablet ? hp('2%') : hp('2.5%')}
+                  color="#000000"
+                />
+                <Text style={styles.changeText}>Change</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.spotsRow}>
+              <View style={styles.spotsLeft}>
+                <TouchableOpacity
+                  onPress={handleDecrement}
+                  style={styles.incrementDecrementButton}>
+                  <Text style={styles.buttonText}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.spotsCountText}>{spotsCount}</Text>
+                <TouchableOpacity
+                  onPress={handleIncrement}
+                  style={styles.incrementDecrementButton}>
+                  <Text style={styles.buttonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.claimButton}
+                onPress={handleClaim}>
+                <Text style={styles.claimButtonText}>Claim</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      );
+    };
 
     return (
       <TouchableOpacity
@@ -689,19 +984,19 @@ const RestaurantCard = () => {
                   {restaurants[restaurantIndex].name}
                 </Text>
               </View>
-              {isExpanded ? (
+              {isExpanded && (
                 <View style={styles.categoryContainer}>
                   <Text style={styles.categoryText}>
                     {restaurants[restaurantIndex].category}
                   </Text>
                 </View>
-              ) : null}
+              )}
               <View style={styles.iconContainer}>
                 <TouchableOpacity style={styles.iconButton}>
                   <MaterialCommunityIcons
                     name="message-arrow-right-outline"
                     size={hp('2.5%')}
-                    color={'white'}
+                    color="white"
                   />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton}>
@@ -721,73 +1016,73 @@ const RestaurantCard = () => {
                       {restaurants[restaurantIndex].offer}
                     </Text>
                   </View>
-                  {RenderSelectedTimeCard(
-                    selectedTime!,
+                  {renderSelectedTimeCard(
+                    selectedTime,
                     restaurants[restaurantIndex],
                     restaurantIndex,
-                    toggleExpansion,
                   )}
                 </>
               ) : (
-                <>
-                  {restaurants[restaurantIndex].times.map((slot, slotIndex) => (
-                    <React.Fragment key={slotIndex}>
-                      <View
-                        style={[
-                          styles.offerContainer,
-                          {bottom: isExpanded ? wp('15%') : wp('14.5%')},
-                        ]}>
-                        <Text style={styles.offerText}>
-                          {restaurants[restaurantIndex].offer}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        style={[
-                          styles.timeSlot,
-                          slot.spots === 0 && styles.timeSlotDisabled,
-                        ]}
-                        disabled={slot.spots === 0}
-                        onPress={() => {
-                          handleTimeSlotPress(
-                            restaurants[restaurantIndex],
-                            slot.time,
-                            restaurantIndex,
-                          );
-                          setSelectedTime(slot.time);
-                          setSelectedRestaurant(restaurants[restaurantIndex]);
+                restaurants[restaurantIndex].times.map((slot, slotIndex) => (
+                  <React.Fragment key={slotIndex}>
+                    <View
+                      style={[
+                        styles.offerContainer,
+                        {bottom: isExpanded ? wp('15%') : wp('14.5%')},
+                      ]}>
+                      <Text style={styles.offerText}>
+                        {restaurants[restaurantIndex].offer}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[
+                        styles.timeSlot,
+                        slot.spots === 0 && styles.timeSlotDisabled,
+                      ]}
+                      disabled={slot.spots === 0}
+                      onPress={() => {
+                        console.log(slot.time, 'slot time');
+                        setSelectedTime(slot.time);
+                        setSelectedRestaurant(restaurants[restaurantIndex]);
+                        handleTimeSlotPress(
+                          restaurants[restaurantIndex],
+                          slot.time,
+                          restaurantIndex,
+                        );
+                        if (!isExpanded) {
                           toggleExpansion();
-                        }}>
-                        <View style={styles.timeSlotContent}>
-                          <MaterialIcons
-                            name="access-time"
-                            size={hp('2%')}
-                            color={slot.spots === 0 ? '#888' : '#4CAF50'}
-                          />
+                        }
+                      }}>
+                      <View style={styles.timeSlotContent}>
+                        <MaterialIcons
+                          name="access-time"
+                          size={hp('2%')}
+                          color={slot.spots === 0 ? '#888' : '#4CAF50'}
+                        />
+                        <Text
+                          style={[
+                            styles.timeText,
+                            slot.spots === 0 && styles.timeTextDisabled,
+                          ]}>
+                          {slot.time}
+                        </Text>
+                        <View
+                          style={[
+                            styles.spotsContainer,
+                            slot.spots === 0 && styles.spotsContainerDisabled,
+                          ]}>
                           <Text
                             style={[
-                              styles.timeText,
-                              slot.spots === 0 && styles.timeTextDisabled,
+                              styles.spotsText,
+                              slot.spots === 0 && styles.spotsTextDisabled,
                             ]}>
-                            {slot.time}
+                            {slot.spots} spots
                           </Text>
-                          <View
-                            style={[
-                              styles.spotsContainer,
-                              slot.spots === 0 && styles.spotsContainerDisabled,
-                            ]}>
-                            <Text
-                              style={[
-                                styles.spotsText,
-                                slot.spots === 0 && styles.spotsTextDisabled,
-                              ]}>
-                              {slot.spots} spots
-                            </Text>
-                          </View>
                         </View>
-                      </TouchableOpacity>
-                    </React.Fragment>
-                  ))}
-                </>
+                      </View>
+                    </TouchableOpacity>
+                  </React.Fragment>
+                ))
               )}
             </View>
           </ImageBackground>
@@ -802,18 +1097,19 @@ const RestaurantCard = () => {
     const animatedHeight = useSharedValue(COLLAPSED_HEIGHT);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
+    const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
 
     const toggleExpansion = () => {
       animatedHeight.value = withSpring(
         isExpanded ? COLLAPSED_HEIGHT : EXPANDED_HEIGHT,
         {
-          damping: 0,
+          damping: 20,
           stiffness: 100,
         },
       );
       setIsExpanded(!isExpanded);
+
       setExpandedCardIndex(isExpanded ? null : restaurantIndex);
-      setSelectedTime(null);
     };
 
     const animatedContainerStyle = useAnimatedStyle(() => ({
@@ -832,15 +1128,18 @@ const RestaurantCard = () => {
           <FlatList
             ref={flatListRef}
             data={restaurant.images}
-            renderItem={({item}) =>
-              renderImageItem(
-                {item},
-                restaurantIndex,
-                isExpanded,
-                toggleExpansion,
-                selectedTime,
-              )
-            }
+            extraData={selectedTime} // Add this line
+            renderItem={({item}) => (
+              <ImageItem
+                item={item}
+                restaurantIndex={restaurantIndex}
+                isExpanded={isExpanded}
+                toggleExpansion={toggleExpansion}
+                selectedTime={selectedTime}
+                setSelectedTime={setSelectedTime}
+                setSelectedRestaurant={setSelectedRestaurant}
+              />
+            )}
             horizontal
             pagingEnabled
             snapToInterval={wp('100%')}
