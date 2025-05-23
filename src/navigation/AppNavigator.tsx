@@ -15,23 +15,13 @@ import {
 import BottomNavigation from './BottomNavigation';
 import {SearchFilters} from '../components/Filters';
 import {Layout} from '../components/Layout';
+import ToggleButton from '../components/TabView/TabView';
 
 const Stack = createStackNavigator();
 
 const {width} = Dimensions.get('window');
 const isTablet = width > 768;
 
-// Placeholder DetailsScreen for demonstration
-const DetailsScreen = ({navigation}) => (
-  <View style={styles.detailsContainer}>
-    <Text style={styles.detailsText}>Details Screen</Text>
-    <TouchableOpacity
-      style={styles.backButton}
-      onPress={() => navigation.goBack()}>
-      <Text style={styles.backButtonText}>Go Back</Text>
-    </TouchableOpacity>
-  </View>
-);
 
 const AppNavigator = () => {
   return (

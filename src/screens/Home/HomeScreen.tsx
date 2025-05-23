@@ -36,8 +36,8 @@ const HomeScreen = () => {
       <View style={styles.innerContainer}>
         <View
           style={{
-            width: horizontalScale(375),
-            height: verticalScale(585),
+            width: wp('100%'), // Full screen width
+            height: hp('78%'),
             // backgroundColor: 'yellow',
             justifyContent: 'center',
             alignItems: 'center',
@@ -53,8 +53,9 @@ const HomeScreen = () => {
             // justifyContent: 'center',
             backgroundColor: 'red',
             paddingTop: moderateScale(0),
-          }}>
-          <ToggleButton />
+          }}
+          >
+          {/* <ToggleButton /> */}
         </View>
       </View>
       {/* </SafeAreaView> */}

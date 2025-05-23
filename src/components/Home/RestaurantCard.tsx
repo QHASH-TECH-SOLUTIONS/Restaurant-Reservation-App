@@ -301,8 +301,6 @@ const RestaurantCard = () => {
       return; // Prevent claim if no spots are available
     }
 
-    // const newSpots = Math.max(currentSpots - 1, 0); // Deduct 1 spot per claim
-
     const handleDecrement = () => {
       if (spotsCount > 1) setSpotsCount(prev => prev - 1);
     };
@@ -423,9 +421,19 @@ const RestaurantCard = () => {
     );
   };
 
-  const renderImageItem = ({item}: {item: any}, restaurantIndex: number) => {
+  const renderImageItem = (
+    {item}: {item: any},
+    restaurantIndex: number,
+    isExpanded: boolean,
+    toggleExpansion: () => void,
+    selectedTime: string | null,
+  ) => {
     return (
-      <TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => {
+          toggleExpansion();
+        }}>
         <View style={[styles.carouselItem]}>
           <ImageBackground
             source={{uri: item}}
@@ -442,6 +450,13 @@ const RestaurantCard = () => {
                   {restaurants[restaurantIndex].name}
                 </Text>
               </View>
+              {isExpanded ? (
+                <View style={styles.categoryContainer}>
+                  <Text style={styles.categoryText}>
+                    {restaurants[restaurantIndex].category}
+                  </Text>
+                </View>
+              ) : null}
               <View style={styles.iconContainer}>
                 <TouchableOpacity style={styles.iconButton}>
                   <MaterialCommunityIcons
@@ -461,50 +476,78 @@ const RestaurantCard = () => {
             </View>
 
             <View style={styles.timeOverlay}>
-              {restaurants[restaurantIndex].times.map((slot, slotIndex) => (
-                <TouchableOpacity
-                  key={slotIndex}
-                  style={[
-                    styles.timeSlot,
-                    slot.spots === 0 && styles.timeSlotDisabled,
-                  ]}
-                  disabled={slot.spots === 0}
-                  onPress={() =>
-                    handleTimeSlotPress(
-                      restaurants[restaurantIndex],
-                      slot.time,
-                      restaurantIndex,
-                    )
-                  }>
-                  <View style={styles.timeSlotContent}>
-                    <MaterialIcons
-                      name="access-time"
-                      size={hp('2.9%')}
-                      color={slot.spots === 0 ? '#888' : '#4CAF50'}
-                    />
-                    <Text
-                      style={[
-                        styles.timeText,
-                        slot.spots === 0 && styles.timeTextDisabled,
-                      ]}>
-                      {slot.time}
+              {isExpanded && selectedTime ? (
+                <>
+                  <View style={styles.offerContainer}>
+                    <Text style={styles.offerText}>
+                      {restaurants[restaurantIndex].offer}
                     </Text>
-                    <View
-                      style={[
-                        styles.spotsContainer,
-                        slot.spots === 0 && styles.spotsContainerDisabled,
-                      ]}>
-                      <Text
-                        style={[
-                          styles.spotsText,
-                          slot.spots === 0 && styles.spotsTextDisabled,
-                        ]}>
-                        {slot.spots} spots
-                      </Text>
-                    </View>
                   </View>
-                </TouchableOpacity>
-              ))}
+                  {RenderSelectedTimeCard(
+                    selectedTime,
+                    restaurants[restaurantIndex],
+                    restaurantIndex,
+                    toggleExpansion,
+                  )}
+                </>
+              ) : (
+                <>
+                  {restaurants[restaurantIndex].times.map((slot, slotIndex) => (
+                    <React.Fragment key={slotIndex}>
+                      <View
+                        style={[
+                          styles.offerContainer,
+                          {bottom: isExpanded ? wp('15%') : wp('14.5%')},
+                        ]}>
+                        <Text style={styles.offerText}>
+                          {restaurants[restaurantIndex].offer}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[
+                          styles.timeSlot,
+                          slot.spots === 0 && styles.timeSlotDisabled,
+                        ]}
+                        disabled={slot.spots === 0}
+                        onPress={() => {
+                          handleTimeSlotPress(
+                            restaurants[restaurantIndex],
+                            slot.time,
+                            restaurantIndex,
+                          );
+                        }}>
+                        <View style={styles.timeSlotContent}>
+                          <MaterialIcons
+                            name="access-time"
+                            size={hp('2.9%')}
+                            color={slot.spots === 0 ? '#888' : '#4CAF50'}
+                          />
+                          <Text
+                            style={[
+                              styles.timeText,
+                              slot.spots === 0 && styles.timeTextDisabled,
+                            ]}>
+                            {slot.time}
+                          </Text>
+                          <View
+                            style={[
+                              styles.spotsContainer,
+                              slot.spots === 0 && styles.spotsContainerDisabled,
+                            ]}>
+                            <Text
+                              style={[
+                                styles.spotsText,
+                                slot.spots === 0 && styles.spotsTextDisabled,
+                              ]}>
+                              {slot.spots} spots
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    </React.Fragment>
+                  ))}
+                </>
+              )}
             </View>
           </ImageBackground>
         </View>
@@ -673,6 +716,71 @@ const RestaurantCard = () => {
     );
   };
 
+  const renderCarousel = (restaurant: any, restaurantIndex: number) => {
+    const COLLAPSED_HEIGHT = isTablet ? hp('25%') : hp('22%');
+    const EXPANDED_HEIGHT = isTablet ? hp('60%') : hp('70%');
+    const animatedHeight = useSharedValue(COLLAPSED_HEIGHT);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+    const toggleExpansion = () => {
+      animatedHeight.value = withSpring(
+        isExpanded ? COLLAPSED_HEIGHT : EXPANDED_HEIGHT,
+        {
+          damping: 0,
+          stiffness: 100,
+        },
+      );
+      setIsExpanded(!isExpanded);
+      setExpandedCardIndex(isExpanded ? null : restaurantIndex);
+      setSelectedTime(null);
+    };
+
+    const animatedContainerStyle = useAnimatedStyle(() => ({
+      width: '98%',
+      height: animatedHeight.value,
+      overflow: 'hidden',
+    }));
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => {
+          toggleExpansion();
+        }}>
+        <Animated.View style={[animatedContainerStyle, styles.card]}>
+          <FlatList
+            ref={flatListRef}
+            data={restaurant.images}
+            renderItem={({item}) =>
+              renderImageItem(
+                {item},
+                restaurantIndex,
+                isExpanded,
+                toggleExpansion,
+                selectedTime,
+              )
+            }
+            horizontal
+            pagingEnabled
+            snapToInterval={wp('100%')}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item, idx) => idx.toString()}
+            initialScrollIndex={0}
+            getItemLayout={(data, index) => ({
+              length: wp('100%'),
+              offset: wp('100%') * index,
+              index,
+            })}
+            style={styles.carousel}
+          />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <ScrollView
       ref={scrollViewRef}
@@ -685,29 +793,9 @@ const RestaurantCard = () => {
           onLayout={event => onCardLayout(index, event)}>
           {restaurant.isCarousel &&
           restaurant.images &&
-          restaurant.images.length > 0 ? (
-            <FlatList
-              ref={flatListRef}
-              data={restaurant.images}
-              renderItem={({item}) => renderImageItem({item}, index)}
-              horizontal
-              pagingEnabled
-              snapToInterval={wp('100%')}
-              snapToAlignment="start"
-              decelerationRate="fast"
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item, idx) => idx.toString()}
-              initialScrollIndex={0}
-              getItemLayout={(data, index) => ({
-                length: wp('100%'),
-                offset: wp('100%') * index,
-                index,
-              })}
-              style={styles.carousel}
-            />
-          ) : (
-            renderSingleImage(restaurant.image || '', index)
-          )}
+          restaurant.images.length > 0
+            ? renderCarousel(restaurant, index)
+            : renderSingleImage(restaurant.image || '', index)}
         </View>
       ))}
     </ScrollView>
@@ -722,7 +810,7 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {},
   card: {
-    marginVertical: hp('1%'),
+    marginVertical: hp('0.5%'),
     marginHorizontal: wp('1%'),
     borderRadius: 8,
     overflow: 'hidden',
@@ -734,11 +822,10 @@ const styles = StyleSheet.create({
   },
   image: {
     width: wp('100%'),
-    height: isTablet ? hp('25%') : hp('22%'),
+    height: '100%',
   },
   carousel: {
     width: wp('100%'),
-    height: isTablet ? hp('25%') : hp('22%'),
   },
   carouselItem: {
     width: wp('100%'),
