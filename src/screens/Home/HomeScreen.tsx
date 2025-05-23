@@ -44,7 +44,6 @@ const HomeScreen = () => {
           }}>
           <RestaurantCard />
         </View>
-
         <View
           style={{
             width: horizontalScale(375),
