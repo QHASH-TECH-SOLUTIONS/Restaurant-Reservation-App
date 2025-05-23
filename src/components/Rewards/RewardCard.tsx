@@ -25,7 +25,7 @@ const RewardsScreen = () => {
     birthdayGifts: false,
   });
 
-  const toggleAccordion = section => {
+  const toggleAccordion = (section: keyof typeof expanded) => {
     setExpanded(prev => ({
       ...prev,
       [section]: !prev[section],
