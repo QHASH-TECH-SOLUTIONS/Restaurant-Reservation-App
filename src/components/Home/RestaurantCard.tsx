@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     position: 'absolute',
     paddingHorizontal: wp('3%'),
-    top: hp('2%'),
+    // top: hp('2%'),
     left: wp('2%'),
     right: wp('2%'),
   },
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     width: '100%',
-    paddingVertical: isTablet ? hp('1%') : hp('1%'),
+    // paddingVertical: isTablet ? hp('1%') : hp('1%'),
     paddingHorizontal: wp('3%'),
     elevation: 2,
     shadowOpacity: 0.2,
@@ -975,7 +975,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: isTablet ? hp('0.3%') : hp('0.5%'),
+    // paddingVertical: isTablet ? hp('0.3%') : hp('0.5%'),
   },
   timeLeft: {
     flexDirection: 'row',
@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
     borderColor: '#dedfe0',
     borderRadius: 5,
     borderWidth: 1,
-    padding: isTablet ? wp('1%') : wp('1.5%'),
+    // padding: isTablet ? wp('1%') : wp('1.5%'),
     gap: isTablet ? wp('0.8%') : wp('1%'),
   },
   changeText: {
@@ -1000,8 +1000,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: isTablet ? hp('0.3%') : hp('0.5%'),
-    marginTop: isTablet ? hp('0.5%') : hp('0.5%'),
+    // paddingVertical: isTablet ? hp('0.3%') : hp('0.5%'),
+    // marginTop: isTablet ? hp('0.5%') : hp('0.5%'),
   },
   spotsLeft: {
     flexDirection: 'row',
@@ -1027,8 +1027,8 @@ const styles = StyleSheet.create({
   claimButton: {
     backgroundColor: '#4CAF50',
     borderRadius: 10,
-    paddingVertical: isTablet ? hp('0.8%') : hp('1%'),
-    paddingHorizontal: isTablet ? wp('3%') : wp('4%'),
+    // paddingVertical: isTablet ? hp('0.8%') : hp('1%'),
+    // paddingHorizontal: isTablet ? wp('3%') : wp('4%'),
     alignItems: 'center',
   },
   claimButtonText: {
