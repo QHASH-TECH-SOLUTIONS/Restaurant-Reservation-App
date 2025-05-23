@@ -31,6 +31,7 @@ import {
   updateSpots,
 } from '../../store/redux-toolkit/reducers/claimSlice';
 import {RootState} from '../../store/redux-toolkit/store';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const {width, height} = Dimensions.get('window');
 const isTablet = width > 768;
@@ -173,6 +174,85 @@ const RestaurantCard = () => {
     },
   ]);
 
+  interface HeightValues {
+    heightValue: number;
+  }
+
+  const getDeviceCategory = () => {
+    if (isTablet) return 'tablet';
+
+    // Use the global height from Dimensions
+    const heightCategories = [
+      {max: 600, category: 'xsmall'},
+      {max: 620, category: 'small-600'},
+      {max: 640, category: 'small-620'},
+      {max: 660, category: 'small-640'},
+      {max: 680, category: 'medium-660'},
+      {max: 700, category: 'medium-680'},
+      {max: 720, category: 'medium-700'},
+      {max: 740, category: 'medium-720'},
+      {max: 760, category: 'medium-740'},
+      {max: 780, category: 'medium-760'},
+      {max: 800, category: 'medium-780'},
+      {max: 820, category: 'large-800'},
+      {max: 840, category: 'large-820'},
+      {max: 860, category: 'large-840'},
+      {max: 880, category: 'large-860'},
+      {max: 900, category: 'large-880'},
+      {max: 920, category: 'large-900'},
+      {max: 940, category: 'large-920'},
+      {max: 960, category: 'xlarge-940'},
+      {max: 980, category: 'xlarge-960'},
+      {max: 1000, category: 'xlarge-980'},
+      {max: Infinity, category: 'xlarge-1000'},
+    ];
+
+    // Find the first category where the screen height is less than or equal to max
+    const category = heightCategories.find(item => height <= item.max);
+    return category ? category.category : 'xlarge-1000';
+  };
+
+  const getHeights = (deviceCategory: string): HeightValues => {
+    // Default values
+    const heights: HeightValues = {
+      heightValue: hp('78%'),
+    };
+
+    // Create a mapping based on device categories
+    const heightMappings: Record<string, HeightValues> = {
+      xsmall: {heightValue: hp('78%')},
+      'small-600': {heightValue: hp('78%')},
+      'small-620': {heightValue: hp('78%')},
+      'small-640': {heightValue: hp('78%')},
+      'medium-660': {heightValue: hp('78%')},
+      'medium-680': {heightValue: hp('78%')},
+      'medium-700': {heightValue: hp('78%')},
+      'medium-720': {heightValue: hp('75%')}, // mehdi
+      'medium-740': {heightValue: hp('78%')},
+      'medium-760': {heightValue: hp('78%')}, //muzammil
+      'medium-780': {heightValue: hp('78%')},
+      'large-800': {heightValue: hp('78%')},
+      'large-820': {heightValue: hp('78%')},
+      'large-840': {heightValue: hp('78%')},
+      'large-860': {heightValue: hp('68.5%')}, // babar
+      'large-880': {heightValue: hp('78%')},
+      'large-900': {heightValue: hp('78%')},
+      'large-920': {heightValue: hp('78%')},
+      'xlarge-940': {heightValue: hp('78%')},
+      'xlarge-960': {heightValue: hp('78%')},
+      'xlarge-980': {heightValue: hp('78%')},
+      'xlarge-1000': {heightValue: hp('78%')},
+      tablet: {heightValue: hp('78%')},
+    };
+
+    return heightMappings[deviceCategory] || heights;
+  };
+
+  const insets = useSafeAreaInsets();
+  const deviceCategory = getDeviceCategory();
+  const {heightValue} = getHeights(deviceCategory);
+
+  const carouselHeight = heightValue + insets.bottom;
   // Sync restaurants with restaurantSpots whenever it changes
   useEffect(() => {
     setRestaurants(prevRestaurants =>
@@ -557,7 +637,7 @@ const RestaurantCard = () => {
 
   const renderSingleImage = (imageUrl: string, restaurantIndex: number) => {
     const COLLAPSED_HEIGHT = isTablet ? hp('25%') : hp('22%');
-    const EXPANDED_HEIGHT = isTablet ? hp('60%') : hp('70%');
+    const EXPANDED_HEIGHT = isTablet ? hp('60%') : carouselHeight;
     const animatedHeight = useSharedValue(COLLAPSED_HEIGHT);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -718,7 +798,7 @@ const RestaurantCard = () => {
 
   const renderCarousel = (restaurant: any, restaurantIndex: number) => {
     const COLLAPSED_HEIGHT = isTablet ? hp('25%') : hp('22%');
-    const EXPANDED_HEIGHT = isTablet ? hp('60%') : hp('70%');
+    const EXPANDED_HEIGHT = isTablet ? hp('60%') : carouselHeight;
     const animatedHeight = useSharedValue(COLLAPSED_HEIGHT);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
